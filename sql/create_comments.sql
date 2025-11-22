@@ -10,4 +10,5 @@ CREATE TABLE comments (
     distinguished Nullable(String),
     subreddit String
 ) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(created_utc)
 ORDER BY (subreddit, link_id, created_utc, id);

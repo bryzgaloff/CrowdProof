@@ -16,4 +16,5 @@ CREATE TABLE submissions (
     distinguished Nullable(String),
     subreddit String
 ) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(created_utc)
 ORDER BY (subreddit, created_utc, id);
