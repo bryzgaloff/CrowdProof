@@ -7,7 +7,7 @@
 
 ## Demo
 
-![Demo Frontend](.github/static/demo-frontend.mov)
+https://github.com/user-attachments/assets/cc3a1f65-60b8-4810-b66b-a3dcb6149248
 
 > [!NOTE]
 > **Disclaimer**: The frontend code is not currently included in this repository; this video serves only to demonstrate the visual process of the agent's work.
