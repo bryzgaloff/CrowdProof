@@ -2,4 +2,8 @@
 name = "yandex-reputeo-ai-hackathon"
 version = "0.0.0"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "openai>=2.8.1",
+    "pydantic>=2.12.4",
+    "python-dotenv>=1.2.1",
+]
