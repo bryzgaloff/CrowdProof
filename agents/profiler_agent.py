@@ -1,11 +1,10 @@
-import json
 import os
 from typing import List
 
 from openai import OpenAI
 from pydantic import BaseModel
 
-from mock_data import Comment, User
+from mock_data import Comment, Tag, User
 
 
 class TagsResponse(BaseModel):
@@ -19,11 +18,15 @@ class ProfilerAgent:
     def enrich_user(self, user: User, comments: List[Comment]) -> User:
         """
         Enriches the user with behavioral tags based on their comments.
+        If user already has tags (mock data), returns as is.
         """
-        user_comments = [c.text for c in comments if c.author == user.username]
+        if user.tags:
+            return user
+
+        user_comments = [c.text for c in comments if c.author == user.id]
 
         if not user_comments:
-            user.tags = ['New User']
+            user.tags = [Tag(label='New User', color='gray')]
             return user
 
         comments_text = '\n'.join(f'- {c}' for c in user_comments)
@@ -46,12 +49,13 @@ class ProfilerAgent:
                 response_format=TagsResponse,
             )
 
-            tags = completion.choices[0].message.parsed.tags
+            tags_str = completion.choices[0].message.parsed.tags
             # Limit to 4 tags and ensure they are short
-            user.tags = tags[:4]
+            # Assign random colors for generated tags
+            user.tags = [Tag(label=t, color='blue') for t in tags_str[:4]]
 
         except Exception as e:
-            print(f'Error profiling user {user.username}: {e}')
-            user.tags = ['Unprofiled']
+            print(f'Error profiling user {user.id}: {e}')
+            user.tags = [Tag(label='Unprofiled', color='gray')]
 
         return user

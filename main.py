@@ -53,9 +53,7 @@ def main():
     subreddits = scout.select_subreddits(project_description)
     print('Found Subreddits:')
     for sub in subreddits:
-        print(
-            f'[{sub.color.upper()}] {sub.name} (Score: {sub.relevance_score}) - {sub.url}'
-        )
+        print(f'[{sub.relevance}] {sub.name} - {sub.description}')
 
     # Step 2: Scout Agent - Selecting Credible Users (and Profiling)
     print_step('Scout Agent: Selecting credible users')
@@ -70,10 +68,8 @@ def main():
 
     print('Selected Users:')
     for user in enriched_users:
-        tags_str = ', '.join(user.tags)
-        print(
-            f'User: {user.username} (Credibility: {user.credibility_score}) | Tags: [{tags_str}]'
-        )
+        tags_str = ', '.join([t.label for t in user.tags])
+        print(f'User: {user.id} (Credibility: {user.credibility}) | Tags: [{tags_str}]')
 
     # Step 3: Scout Agent - Mining Opinions
     print_step('Scout Agent: Mining opinions')
@@ -89,7 +85,7 @@ def main():
     features = analyst.mine_features(comments, project_description)
     print('Extracted Features:')
     for f in features:
-        print(f'- {f.name}: {f.description}')
+        print(f'- {f.title} ({f.category})')
 
     # Step 5: Product Analyst Agent - Prioritizing Features
     print_step('Product Analyst Agent: Prioritizing features')
@@ -98,9 +94,9 @@ def main():
     )
     print('Priority Backlog:')
     for pf in prioritized_features:
-        print(f'Feature: {pf.name}')
-        print(f'  Consensus Weight: {pf.consensus_weight}')
-        print(f'  Related Comments: {pf.related_comments_count}')
+        print(f'Feature: {pf.title}')
+        print(f'  Consensus Weight: {pf.consensusWeight}')
+        print(f'  Related Comments: {pf.linkedComments}')
 
     # Step 6: Product Analyst Agent - Validating the Idea
     print_step('Product Analyst Agent: Validating the idea')
@@ -109,7 +105,7 @@ def main():
     print('PMF REPORT')
     print('==========')
     print(f'PMF Confidence Score: {pmf_report.score}/100')
-    print(f'Summary: {pmf_report.validation_text}')
+    # print(f"Summary: {pmf_report.validation_text}") # Removed from model
     print('Key Validation Points:')
     for point in pmf_report.summary:
         print(f'* {point}')
