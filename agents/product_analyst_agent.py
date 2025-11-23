@@ -5,6 +5,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 
 from mock_data import Comment, Feature, PMFReport, PrioritizedFeature, User
+from scoring.formulas import calculate_consensus_weight, calculate_pmf_score
 
 
 class FeatureAnalysis(BaseModel):
@@ -132,7 +133,13 @@ class ProductAnalystAgent:
                     # Normalize credibility to 0-1 for calculation
                     cred_norm = credibility / 100.0
 
-                    weight = cred_norm * sentiment * intensity * 100  # Scale up
+                    # Use formula from scoring package
+                    # Note: The formula returns Cu * S * I. We scale it up by 100 as per previous logic/demo values
+                    weight = (
+                        calculate_consensus_weight(cred_norm, sentiment, intensity)
+                        * 100
+                    )
+
                     consensus_weight += weight
                     valid_comments_count += 1
                     representative_comments.append(comment)
@@ -172,14 +179,27 @@ class ProductAnalystAgent:
             for f in top_features
         )
 
+        # Calculate PMF Score using formula
+        top_weights = [f.consensusWeight for f in top_features]
+        total_volume = sum(
+            f.linkedComments for f in prioritized_features
+        )  # Approximation of volume
+
+        # Note: The formula expects weights and volume.
+        # Our weights are scaled (0-100+). Volume is count of comments.
+        # Let's use the formula function.
+        pmf_score = calculate_pmf_score(top_weights, total_volume)
+
         prompt = f"""
         Project Description: {project_description}
         
         Top Validated Features:
         {features_text}
         
+        Calculated PMF Score: {pmf_score}
+        
         Based on the validation of these features by credible users, generate a Product-Market Fit (PMF) report.
-        1. Assign a PMF Confidence Score (0-100). Be optimistic but realistic based on the weights.
+        1. Use the calculated PMF Score ({pmf_score}) as the confidence score.
         2. Provide 5-7 bullet points highlighting the positive aspects confirmed by the data.
         """
 
@@ -192,7 +212,10 @@ class ProductAnalystAgent:
                 ],
                 response_format=PMFReport,
             )
-            return completion.choices[0].message.parsed
+            # Override the score with our calculated one to ensure consistency
+            report = completion.choices[0].message.parsed
+            report.score = pmf_score
+            return report
         except Exception as e:
             print(f'Error validating idea: {e}')
             return PMFReport(score=0, summary=['Error generating report.'])
